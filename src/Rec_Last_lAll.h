@@ -2,7 +2,6 @@
 #define REC_LAST_LALL_H
 
 #include "pRectangle.h"
-#include "Cost.h"
 #include <vector>
 #include <list>
 #include <iterator>
@@ -10,27 +9,28 @@
 
 class Rec_Last_lAll {
 private:
-  unsigned int Dim;
-  unsigned int Tau;
-  pRectangle* Rect;
-  double** CumSumData;
-  double** CumSumData2;
-  double* VectOfCosts;
-  std::list<pSphere> DiskListBefore;
+  unsigned int dim;
+  unsigned int tau;
+  pRectangle* rect;
+  double** cumSumData;
+  double** cumSumData2;
+  double* vectOfCosts;
+  std::list<pSphere> lDiskPass;
 
 public:
-  Rec_Last_lAll(): Dim(0), Tau(0), Rect(0), CumSumData(NULL), CumSumData2(NULL), VectOfCosts(NULL) { }
-  Rec_Last_lAll(unsigned  int dim): Dim(dim), Tau(0), Rect(new pRectangle(dim)), CumSumData(NULL), CumSumData2(NULL), VectOfCosts(NULL) { }
-  Rec_Last_lAll(unsigned int dim, unsigned int t): Dim(dim), Tau(t), Rect(new pRectangle(dim)), CumSumData(NULL), CumSumData2(NULL), VectOfCosts(NULL) { }
+  Rec_Last_lAll(): dim(0), tau(0), rect(0), cumSumData(NULL), cumSumData2(NULL), vectOfCosts(NULL) { }
+  Rec_Last_lAll(unsigned  int p): dim(p), tau(0), rect(new pRectangle(p)), cumSumData(NULL), cumSumData2(NULL), vectOfCosts(NULL) { }
+  Rec_Last_lAll(unsigned int p, unsigned int t): dim(p), tau(t), rect(new pRectangle(p)), cumSumData(NULL), cumSumData2(NULL), vectOfCosts(NULL) { }
   Rec_Last_lAll(const Rec_Last_lAll & candidate);
   ~Rec_Last_lAll();
-
-  double Dist(double* a, double*b);
-  unsigned int GetTau()const;
-  std::list<pSphere> GetDiskListBefore() const;
-  void CleanOfCandidate();
-  bool EmptyOfCandidate();
-  void InitialOfCandidate(unsigned int tau, double** &cumsumdata, double** &cumsumdata2, double* &vectofcosts,  std::vector <unsigned int> & DiskIndexBefore);
-  void UpdateOfCandidate(unsigned int IndexToLinkOfUpdCand, std::vector<std::list<Rec_Last_lAll>::iterator> &vectlinktocands, unsigned int& RealNbExclus);
+  
+  unsigned int getTau()const;
+  std::list<pSphere> getlDiskPass() const;
+  
+  double calculRadius2(Cost & cost, unsigned int i, unsigned int j);
+  void cleanOfCandidate();
+  bool isEmptyOfCandidate();
+  void initialOfCandidate(unsigned int t, double** &cumsumdata, double** &cumsumdata2, double* &vectofcosts,  std::vector <unsigned int> & lDiskIndexPass);
+  void updateOfCandidate(unsigned int indexToLinkOfUpdCand, std::vector<std::list<Rec_Last_lAll>::iterator> &vectlinktocands, unsigned int& realNbExclus);
 };
 #endif //REC_LAST_LALL_H

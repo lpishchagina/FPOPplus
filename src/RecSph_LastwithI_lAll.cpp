@@ -1,13 +1,13 @@
-#include "RecSph_All_lAll.h"
+#include "RecSph_LastwithI_lAll.h"
 #include <Rcpp.h>
 
 using namespace Rcpp;
 using namespace std;
 
-RecSph_All_lAll::RecSph_All_lAll(const RecSph_All_lAll & candidate) {
+RecSph_LastwithI_lAll::RecSph_LastwithI_lAll(const RecSph_LastwithI_lAll & candidate) {
   dim = candidate.dim;
   tau = candidate.tau;
-  rect = new pRectangle(dim);
+  rect= new pRectangle(dim);
   cumSumData = candidate.cumSumData;
   cumSumData2 = candidate.cumSumData2;
   vectOfCosts = candidate.vectOfCosts;
@@ -15,30 +15,27 @@ RecSph_All_lAll::RecSph_All_lAll(const RecSph_All_lAll & candidate) {
   lDiskPass = candidate.lDiskPass;
 }
 
-RecSph_All_lAll::~RecSph_All_lAll() { delete rect;  cumSumData = NULL; cumSumData2 = NULL; vectOfCosts = NULL; }
+RecSph_LastwithI_lAll::~RecSph_LastwithI_lAll() { delete rect;  cumSumData = NULL; cumSumData2 = NULL; vectOfCosts = NULL; }
 
-std::list<pSphere> RecSph_All_lAll::getlDiskPass()const { return lDiskPass; }
+std::list<pSphere> RecSph_LastwithI_lAll::getlDiskPass()const { return lDiskPass; }
+unsigned int RecSph_LastwithI_lAll::getTau()const { return tau; }
 
-unsigned int RecSph_All_lAll::getTau()const { return tau; }
-
-double RecSph_All_lAll::calculRadius2(Cost & cost, unsigned int i, unsigned int j){
+double RecSph_LastwithI_lAll::calculRadius2(Cost & cost, unsigned int i, unsigned int j){
   cost.InitialCost(dim, i, j, cumSumData, cumSumData2, vectOfCosts);
   double radius2 = (vectOfCosts[j + 1] - vectOfCosts[i] - cost.get_coef_Var())/cost.get_coef();
   return radius2;
 }
 
-void RecSph_All_lAll::cleanOfCandidate() { cumSumData = NULL; cumSumData2 = NULL; vectOfCosts = NULL;  lDiskPass.clear(); }
 
-bool RecSph_All_lAll::isEmptyOfCandidate() { return rect -> IsEmpty_rect(); }
+void RecSph_LastwithI_lAll::cleanOfCandidate() { cumSumData = NULL; cumSumData2 = NULL; vectOfCosts = NULL;  lDiskPass.clear(); }
+bool RecSph_LastwithI_lAll::isEmptyOfCandidate() { return rect -> IsEmpty_rect(); }
 
-
-void RecSph_All_lAll::initialOfCandidate(unsigned int t, double** &cumsumdata, double** &cumsumdata2, double* &vectofcosts, std::vector <unsigned int> & vDiskIndexPass) {
+void RecSph_LastwithI_lAll::initialOfCandidate(unsigned int t, double** &cumsumdata, double** &cumsumdata2, double* &vectofcosts, std::vector <unsigned int> & vDiskIndexPass) {
   tau = t;
   cumSumData = cumsumdata;
   cumSumData2 = cumsumdata2;
   vectOfCosts = vectofcosts;
   lDiskPass.clear();
-  //create lDiskPass
   if (vDiskIndexPass.size() != 0) {
     Cost cost = Cost(dim);
     pSphere diskPass = pSphere(dim);
@@ -51,16 +48,30 @@ void RecSph_All_lAll::initialOfCandidate(unsigned int t, double** &cumsumdata, d
   }
 }
 
-void RecSph_All_lAll::updateOfCandidate(unsigned int indexToLinkOfUpdCand, std::vector<std::list<RecSph_All_lAll>::iterator> &vectlinktocands, unsigned int &realNbExclus) {
+void RecSph_LastwithI_lAll::updateOfCandidate(unsigned int indexToLinkOfUpdCand, std::vector<std::list<RecSph_LastwithI_lAll>::iterator> &vectlinktocands, unsigned int &realNbExclus) {
   realNbExclus = 0;
-  Cost cost= Cost(dim);
+  Cost cost = Cost(dim);
   unsigned int j = vectlinktocands[vectlinktocands.size() - 1] -> getTau();
   double radius2 = calculRadius2(cost, tau, j);
   if (radius2 < 0) { rect -> DoEmpty_rect(); return;}   //pelt
   pSphere diskI = pSphere(dim);
   diskI.InitialpSphere(dim, cost.get_mu(), sqrt(radius2));
-  std::list<pSphere>::iterator iter;
+  //sphere intersection :
+  if (indexToLinkOfUpdCand  != (vectlinktocands.size()-1)) {
+    pSphere diskIold = pSphere(dim);
+    for (unsigned int i = indexToLinkOfUpdCand; i < (vectlinktocands.size()-1); i++) {
+      j = vectlinktocands[i] -> getTau();
+      radius2 = calculRadius2(cost, tau, j);
+      if (radius2 < 0) { rect -> DoEmpty_rect();; return;}   //pelt
+      diskIold.InitialpSphere(dim, cost.get_mu(), sqrt(radius2));
+      if (!diskI.isIntersection(diskIold)) {
+        rect -> DoEmpty_rect();
+        return;
+      }
+    }
+  }
   //sphere inclusion :
+  std::list<pSphere>::iterator iter; 
   if (lDiskPass.size() != 0) {
     iter = lDiskPass.begin();
     while( iter != lDiskPass.end()) {
@@ -77,15 +88,9 @@ void RecSph_All_lAll::updateOfCandidate(unsigned int indexToLinkOfUpdCand, std::
       }
     }
   }
-  //rect intersection :
-  for (unsigned int i = indexToLinkOfUpdCand; i < vectlinktocands.size(); i++) {
-    j = vectlinktocands[i] -> getTau();
-    radius2 = calculRadius2(cost, tau, j);
-    if (radius2 < 0) { rect -> DoEmpty_rect(); return; }//pelt
-    diskI.InitialpSphere(dim, cost.get_mu(), sqrt(radius2));
-    rect -> Intersection_disk(diskI);
-    if (rect -> IsEmpty_rect()) { return;}
-  }
+  //rect last intersection :
+  rect -> Intersection_disk(diskI);
+  if (rect -> IsEmpty_rect()) { return; }
   //rect exclusion :
   if (lDiskPass.size() != 0) {
     iter = lDiskPass.begin();

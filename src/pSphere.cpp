@@ -43,5 +43,23 @@ void pSphere::InitialpSphere(unsigned int dim, double* c, double r){
   for (unsigned int i = 0; i < p; i++){center[i] = c[i];}
 }
 //******************************************************************************
+double pSphere::getDistbwnCenters(const pSphere &diskNew) {
+  double* centerNew = diskNew.get_center();
+  double res = 0;
+  for (unsigned int k = 0; k < p; k++) { res = res + (center[k] - centerNew[k])*(center[k] - centerNew[k]); }
+    return sqrt(res);
+}
+//******************************************************************************
+bool pSphere::isInclusion (const pSphere &diskNew) {//true if (disk in diskNew)
+  bool res = (diskNew.get_radius() >= (getDistbwnCenters(diskNew) + radius));
+  return res;
+}
+//******************************************************************************
+bool pSphere::isIntersection (const pSphere &diskNew){// true if (disk inter diskNew != 0) 
+  bool res = (getDistbwnCenters(diskNew) < (radius + diskNew.get_radius()));
+  return res;
+}
+//******************************************************************************
 
+//******************************************************************************
 

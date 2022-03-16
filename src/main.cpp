@@ -1,3 +1,13 @@
+// "Rec_Empty_Empty.h"//1.PELT
+//"Sph_Last_lAll.h"//2.sph Inc
+//"Rec_Last_lAll.h"//3.rect last Int, rect E 
+//"RecSph_Last_lAll.h"//4. sph Inc, rect last I, rect E
+//"Rec_All_lAll.h"//5. rect Int, rect E
+//"RecSph_All_lAll.h"//6. sph Inc, rect Int, rect E
+//"RecSph_LastwithI_lAll.h"//7 sph Int, sph Inc, rect last Int, rect E
+//"RecSph_AllwithI_lAll.h"//8 sph Int, sph Inc, rect Int, rect E
+//"Sph_AllwithI_lAll.h"//9 sph Int, sph Inc
+
 #include "FPOP.h"
 #include <Rcpp.h>
 
@@ -11,15 +21,20 @@ int NmbOfapproxFPOP(std::string approximation, std::string intersection,  std::s
   if ((intersection == "empty") && (exclusion == "empty")) { type_approx = 1; }//PELT
 
   if (approximation == "rectangle") {
-    if  (intersection == "last")  { type_approx = 3; }//LastFPOP
-    if  (intersection == "all")  { type_approx = 5; }//FPOP
+    if  (intersection == "last")  { type_approx = 3; }//3.rect last Int, rect E 
+    if  (intersection == "all")  { type_approx = 5; }//5. rect Int, rect E
   }
 
-  if (approximation == "sphere") { type_approx = 2;}
+  if (approximation == "sphere") { 
+    if  (intersection == "last")  {type_approx = 2;}//sph Inc
+    if  (intersection == "lastInt")  {type_approx = 9;}//sph Int, sph Inc
+    }
 
   if (approximation == "sphere_rectangle") {
-    if  (intersection == "last")  { type_approx = 4; }
-    if  (intersection == "all")  { type_approx = 6; }
+    if  (intersection == "last")  { type_approx = 4; }//4. sph Inc, rect last I, rect E
+    if  (intersection == "lastInt")  {type_approx = 7;}//7 sph Int, sph Inc, rect last Int, rect E
+    if  (intersection == "all")  { type_approx = 6; }//6. sph Inc, rect Int, rect E
+    if  (intersection == "allInt")  { type_approx = 8; }//8 sph Int, sph Inc, rect Int, rect E
   }
 
   return type_approx;
@@ -52,7 +67,20 @@ bool TestOfComparisonTwoFPOP(Rcpp::NumericMatrix data, double penalty, unsigned 
     FPOP<RecSph_All_lAll> X = FPOP<RecSph_All_lAll>(data, penalty);
     X.algoFPOP(data, type_approx2, false );
     res =  X.TestFPOP(UnpenalizedCost1, LastChpt1);
+  }  else if (type_approx2 == 7) {
+    FPOP<RecSph_All_lAll> X = FPOP<RecSph_All_lAll>(data, penalty);
+    X.algoFPOP(data, type_approx2, false );
+    res =  X.TestFPOP(UnpenalizedCost1, LastChpt1);
+  } else if (type_approx2 == 8) {
+    FPOP<RecSph_AllwithI_lAll> X = FPOP<RecSph_AllwithI_lAll>(data, penalty);
+    X.algoFPOP(data, type_approx2, false );
+    res =  X.TestFPOP(UnpenalizedCost1, LastChpt1);
+  } else if (type_approx2 == 9) {
+    FPOP<Sph_AllwithI_lAll> X = FPOP<Sph_AllwithI_lAll>(data, penalty);
+    X.algoFPOP(data, type_approx2, false );
+    res =  X.TestFPOP(UnpenalizedCost1, LastChpt1);
   }
+  
   return res;
 }
 
@@ -77,7 +105,7 @@ bool TestOfComparisonTwoFPOP(Rcpp::NumericMatrix data, double penalty, unsigned 
 //' }
 //'
 //' @examples
-//' N <- 100
+//' N <- 1000
 //' Dim <- 2
 //' Penalty <- 2*Dim*log(N)
 //' time_series <- rnormChanges(p = 2, n = N, changes = NULL, means = matrix(0, ncol = 1, nrow = 2), noise = 1)
@@ -87,6 +115,9 @@ bool TestOfComparisonTwoFPOP(Rcpp::NumericMatrix data, double penalty, unsigned 
 //' FPOPplus(data = time_series, penalty = Penalty, approximation = 'rectangle', intersection = 'all', exclusion = 'all',NbOfCands = TRUE)
 //' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere_rectangle', intersection = 'all', exclusion = 'all', NbOfCands = TRUE)
 //' FPOPplus(data = time_series, penalty = Penalty, approximation = 'rectangle', intersection = 'empty', exclusion = 'empty', NbOfCands = TRUE)
+//' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere_rectangle', intersection = 'allInt', exclusion = 'all', NbOfCands = TRUE)
+//' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere_rectangle', intersection = 'lastInt', exclusion = 'all', NbOfCands = TRUE)
+//' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere', intersection = 'lastInt', exclusion = 'all', NbOfCands = TRUE)
 
 // [[Rcpp::export]]
 List FPOPplus(Rcpp::NumericMatrix data, double penalty, std::string approximation = "rectangle", std::string intersection = "all",  std::string exclusion = "all", bool NbOfCands = false) {
@@ -118,6 +149,18 @@ List FPOPplus(Rcpp::NumericMatrix data, double penalty, std::string approximatio
     res = X.ResAlgoFPOP();
   } else  if (type_approx == 6) {
     FPOP<RecSph_All_lAll> X = FPOP<RecSph_All_lAll>(data, penalty);
+    X.algoFPOP(data, type_approx, NbOfCands);
+    res = X.ResAlgoFPOP();
+  } else  if (type_approx == 7) {
+    FPOP<RecSph_LastwithI_lAll> X = FPOP<RecSph_LastwithI_lAll>(data, penalty);
+    X.algoFPOP(data, type_approx, NbOfCands);
+    res = X.ResAlgoFPOP();
+  } else  if (type_approx == 8) {
+    FPOP<RecSph_AllwithI_lAll> X = FPOP<RecSph_AllwithI_lAll>(data, penalty);
+    X.algoFPOP(data, type_approx, NbOfCands);
+    res = X.ResAlgoFPOP();
+  } else  if (type_approx == 9) {
+    FPOP<Sph_AllwithI_lAll> X = FPOP<Sph_AllwithI_lAll>(data, penalty);
     X.algoFPOP(data, type_approx, NbOfCands);
     res = X.ResAlgoFPOP();
   }
@@ -192,6 +235,18 @@ bool TestTwoFPOPplus(Rcpp::NumericMatrix data, double penalty, std::string appro
     res = TestOfComparisonTwoFPOP(data,penalty, type_approx2, X1.GetUnpenalizedCost(), X1.GetLastChpt());
   } else if (type_approx1 == 6) {
     FPOP<RecSph_All_lAll> X1 = FPOP<RecSph_All_lAll>(data, penalty);
+    X1.algoFPOP(data, type_approx1, false );
+    res = TestOfComparisonTwoFPOP(data,penalty, type_approx2, X1.GetUnpenalizedCost(), X1.GetLastChpt());
+  } else if (type_approx1 == 7) {
+    FPOP<RecSph_LastwithI_lAll> X1 = FPOP<RecSph_LastwithI_lAll>(data, penalty);
+    X1.algoFPOP(data, type_approx1, false );
+    res = TestOfComparisonTwoFPOP(data,penalty, type_approx2, X1.GetUnpenalizedCost(), X1.GetLastChpt());
+  } else if (type_approx1 == 8) {
+    FPOP<RecSph_AllwithI_lAll> X1 = FPOP<RecSph_AllwithI_lAll>(data, penalty);
+    X1.algoFPOP(data, type_approx1, false );
+    res = TestOfComparisonTwoFPOP(data,penalty, type_approx2, X1.GetUnpenalizedCost(), X1.GetLastChpt());
+  } else if (type_approx1 == 9) {
+    FPOP<Sph_AllwithI_lAll> X1 = FPOP<Sph_AllwithI_lAll>(data, penalty);
     X1.algoFPOP(data, type_approx1, false );
     res = TestOfComparisonTwoFPOP(data,penalty, type_approx2, X1.GetUnpenalizedCost(), X1.GetLastChpt());
   }

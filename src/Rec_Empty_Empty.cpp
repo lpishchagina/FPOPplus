@@ -5,37 +5,41 @@ using namespace Rcpp;
 using namespace std;
 
 Rec_Empty_Empty::Rec_Empty_Empty(const Rec_Empty_Empty & candidate) {
-  Dim = candidate.Dim;
-  Tau = candidate.Tau;
-  CumSumData = candidate.CumSumData;
-  CumSumData2 = candidate.CumSumData;
-  VectOfCosts = candidate.VectOfCosts;
+  dim = candidate.dim;
+  tau = candidate.tau;
+  cumSumData = candidate.cumSumData;
+  cumSumData2 = candidate.cumSumData;
+  vectOfCosts = candidate.vectOfCosts;
 }
 
-Rec_Empty_Empty::~Rec_Empty_Empty() { CumSumData = NULL; CumSumData2 = NULL;  VectOfCosts = NULL; }
+Rec_Empty_Empty::~Rec_Empty_Empty() { cumSumData = NULL; cumSumData2 = NULL;  vectOfCosts = NULL; }
 
-unsigned int Rec_Empty_Empty::GetTau()const { return Tau; }
+unsigned int Rec_Empty_Empty::getTau()const { return tau; }
 
-void Rec_Empty_Empty::CleanOfCandidate() { CumSumData = NULL;  CumSumData2 = NULL; VectOfCosts = NULL; fl_empty = false; }
-
-bool Rec_Empty_Empty::EmptyOfCandidate() { return fl_empty; }
-
-void Rec_Empty_Empty::InitialOfCandidate(unsigned int tau, double** &cumsumdata, double** &cumsumdata2, double* &vectofcosts, std::vector <unsigned int> & DiskIndexBefore) {
-  Tau = tau;
-  CumSumData = cumsumdata;
-  CumSumData2 = cumsumdata2;
-  VectOfCosts = vectofcosts;
-  fl_empty = false;
+double Rec_Empty_Empty::calculRadius2(Cost & cost, unsigned int i, unsigned int j){
+  cost.InitialCost(dim, i, j, cumSumData, cumSumData2, vectOfCosts);
+  double radius2 = (vectOfCosts[j + 1] - vectOfCosts[i] - cost.get_coef_Var())/cost.get_coef();
+  return radius2;
 }
 
-void Rec_Empty_Empty::UpdateOfCandidate(unsigned int IndexToLinkOfUpdCand, std::vector<std::list<Rec_Empty_Empty>::iterator> &vectlinktocands, unsigned int& RealNbExclus) {
-  fl_empty = false;
+void Rec_Empty_Empty::cleanOfCandidate() { cumSumData = NULL;  cumSumData2 = NULL; vectOfCosts = NULL; flEmpty = false; }
+
+bool Rec_Empty_Empty::isEmptyOfCandidate() { return flEmpty; }
+
+void Rec_Empty_Empty::initialOfCandidate(unsigned int t, double** &cumsumdata, double** &cumsumdata2, double* &vectofcosts, std::vector <unsigned int> & vDiskIndexPass) {
+  tau = t;
+  cumSumData = cumsumdata;
+  cumSumData2 = cumsumdata2;
+  vectOfCosts = vectofcosts;
+  flEmpty = false;
+}
+
+void Rec_Empty_Empty::updateOfCandidate(unsigned int indexToLinkOfUpdCand, std::vector<std::list<Rec_Empty_Empty>::iterator> &vectlinktocands, unsigned int& realNbExclus) {
+  flEmpty = false;
   //pelt
-  Cost cost = Cost(Dim);
-  unsigned int LastT = vectlinktocands[vectlinktocands.size()-1] -> GetTau();
-  cost.InitialCost(Dim, Tau, LastT, CumSumData, CumSumData2, VectOfCosts);
-  double Radius2 = (VectOfCosts[LastT + 1] - VectOfCosts[Tau] - cost.get_coef_Var())/cost.get_coef();
-  if (Radius2 < 0) {
-    fl_empty = true;
+  Cost cost = Cost(dim);
+  unsigned int lastT = vectlinktocands[vectlinktocands.size()-1] -> getTau();
+  if (calculRadius2(cost,  tau, lastT) < 0) {//pelt
+    flEmpty = true;
   }
 }

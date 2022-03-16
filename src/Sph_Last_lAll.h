@@ -1,7 +1,6 @@
 #ifndef SPH_LAST_LALL_H
 #define SPH_LAST_LALL_H
 #include "pSphere.h"
-#include "Cost.h"
 #include <vector>
 #include <list>
 #include <iterator>
@@ -9,27 +8,28 @@
 
 class Sph_Last_lAll {
 private:
-  unsigned int Dim;
-  unsigned int Tau;
-  double** CumSumData;
-  double** CumSumData2;
-  double* VectOfCosts;
-  bool fl_empty;
-  std::list<pSphere> DiskListBefore;
+  unsigned int dim;
+  unsigned int tau;
+  double** cumSumData;
+  double** cumSumData2;
+  double* vectOfCosts;
+  bool flEmpty;
+  std::list<pSphere> lDiskPass;
 
 public:
-  Sph_Last_lAll(): Dim(0), Tau(0), CumSumData(NULL), CumSumData2(NULL), VectOfCosts(NULL),  fl_empty(false) { }
-  Sph_Last_lAll(unsigned  int dim): Dim(dim), Tau(0), CumSumData(NULL), CumSumData2(NULL), VectOfCosts(NULL), fl_empty(false) { }
-  Sph_Last_lAll(unsigned int dim, unsigned int t): Dim(dim), Tau(t), CumSumData(NULL), CumSumData2(NULL), VectOfCosts(NULL), fl_empty(false) { }
+  Sph_Last_lAll(): dim(0), tau(0), cumSumData(NULL), cumSumData2(NULL), vectOfCosts(NULL),  flEmpty(false) { }
+  Sph_Last_lAll(unsigned  int p): dim(p), tau(0), cumSumData(NULL), cumSumData2(NULL), vectOfCosts(NULL), flEmpty(false) { }
+  Sph_Last_lAll(unsigned int p, unsigned int t): dim(p), tau(t), cumSumData(NULL), cumSumData2(NULL), vectOfCosts(NULL), flEmpty(false) { }
   Sph_Last_lAll(const Sph_Last_lAll & candidate);
   ~Sph_Last_lAll();
-
-  unsigned int GetTau()const;
-  double Dist(double* a, double*b);
-  void CleanOfCandidate();
-  bool EmptyOfCandidate();
-  void InitialOfCandidate(unsigned int tau, double** &cumsumdata,  double** &cumsumdata2, double* &vectofcosts, std::vector <unsigned int> & DiskIndexBefore);
-  void UpdateOfCandidate(unsigned int IndexToLinkOfUpdCand, std::vector<std::list<Sph_Last_lAll>::iterator> &vectlinktocands, unsigned int& RealNbExclus);
+  
+  unsigned int getTau()const;
+  
+  double calculRadius2(Cost & cost, unsigned int i, unsigned int j);
+  void cleanOfCandidate();
+  bool isEmptyOfCandidate();
+  void initialOfCandidate(unsigned int tau, double** &cumsumdata,  double** &cumsumdata2, double* &vectofcosts, std::vector <unsigned int> & vDiskIndexPass);
+  void updateOfCandidate(unsigned int indexToLinkOfUpdCand, std::vector<std::list<Sph_Last_lAll>::iterator> &vectlinktocands, unsigned int& realNbExclus);
 };
 #endif //SPH_LAST_LALL_H
 //------------------------------------------------------------------------------

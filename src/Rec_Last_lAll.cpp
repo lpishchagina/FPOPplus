@@ -5,72 +5,71 @@ using namespace Rcpp;
 using namespace std;
 
 Rec_Last_lAll::Rec_Last_lAll(const Rec_Last_lAll & candidate) {
-  Dim = candidate.Dim;
-  Tau = candidate.Tau;
-  Rect= new pRectangle(Dim);
-  CumSumData = candidate.CumSumData;
-  CumSumData2 = candidate.CumSumData2;
-  VectOfCosts = candidate.VectOfCosts;
-  DiskListBefore.clear();
-  DiskListBefore = candidate.DiskListBefore;
+  dim = candidate.dim;
+  tau = candidate.tau;
+  rect = new pRectangle(dim);
+  cumSumData = candidate.cumSumData;
+  cumSumData2 = candidate.cumSumData2;
+  vectOfCosts = candidate.vectOfCosts;
+  lDiskPass.clear();
+  lDiskPass = candidate.lDiskPass;
 }
 
-Rec_Last_lAll::~Rec_Last_lAll() { delete Rect;  CumSumData = NULL;  CumSumData2 = NULL;  VectOfCosts = NULL; }
+Rec_Last_lAll::~Rec_Last_lAll() { delete rect;  cumSumData = NULL;  cumSumData2 = NULL;  vectOfCosts = NULL; }
 
-unsigned int Rec_Last_lAll::GetTau()const { return Tau; }
-std::list<pSphere> Rec_Last_lAll::GetDiskListBefore()const { return DiskListBefore; }
-void Rec_Last_lAll::CleanOfCandidate() { CumSumData = NULL;  CumSumData2 = NULL;  VectOfCosts = NULL; DiskListBefore.clear();}
-bool Rec_Last_lAll::EmptyOfCandidate() { return Rect -> IsEmpty_rect(); }
-void Rec_Last_lAll::InitialOfCandidate(unsigned int tau, double** &cumsumdata,  double** &cumsumdata2, double* &vectofcosts,  std::vector <unsigned int> & DiskIndexBefore) {
-  Tau = tau;
-  CumSumData = cumsumdata;
-  CumSumData2 = cumsumdata2;
-  VectOfCosts = vectofcosts;
-  DiskListBefore.clear();
+unsigned int Rec_Last_lAll::getTau()const { return tau; }
+std::list<pSphere> Rec_Last_lAll::getlDiskPass()const { return lDiskPass; }
 
-  if (DiskIndexBefore.size() != 0) {
-    Cost cost = Cost(Dim);
-    pSphere DiskBefore = pSphere(Dim);
-    double Radius2;
-    for (std::vector<unsigned int>::iterator it = DiskIndexBefore.begin() ; it != DiskIndexBefore.end(); ++it) {
-      cost.InitialCost(Dim, (*it), Tau-1, CumSumData, CumSumData2, VectOfCosts);
-      Radius2 = (VectOfCosts[Tau] - VectOfCosts[(*it)] - cost.get_coef_Var()) / cost.get_coef();
-      DiskBefore.InitialpSphere(Dim, cost.get_mu(), sqrt(Radius2));
-      DiskListBefore.push_back(DiskBefore);
+
+double Rec_Last_lAll::calculRadius2(Cost & cost, unsigned int i, unsigned int j){
+  cost.InitialCost(dim, i, j, cumSumData, cumSumData2, vectOfCosts);
+  double radius2 = (vectOfCosts[j + 1] - vectOfCosts[i] - cost.get_coef_Var())/cost.get_coef();
+  return radius2;
+}
+
+void Rec_Last_lAll::cleanOfCandidate() { cumSumData = NULL;  cumSumData2 = NULL;  vectOfCosts = NULL; lDiskPass.clear();}bool Rec_Last_lAll::isEmptyOfCandidate() { return rect -> IsEmpty_rect(); }
+
+void Rec_Last_lAll::initialOfCandidate(unsigned int t, double** &cumsumdata,  double** &cumsumdata2, double* &vectofcosts,  std::vector <unsigned int> & vDiskIndexPass) {
+  tau = t;
+  cumSumData = cumsumdata;
+  cumSumData2 = cumsumdata2;
+  vectOfCosts = vectofcosts;
+  lDiskPass.clear();
+  //create lDiskPass
+  if (vDiskIndexPass.size() != 0) {
+    Cost cost = Cost(dim);
+    pSphere diskPass = pSphere(dim);
+    double radius2;
+    for (std::vector<unsigned int>::iterator it = vDiskIndexPass.begin() ; it != vDiskIndexPass.end(); ++it) {
+      radius2 = calculRadius2(cost, (*it), (tau-1));
+        
+      diskPass.InitialpSphere(dim, cost.get_mu(), sqrt(radius2));
+      lDiskPass.push_back(diskPass);
     }
   }
 }
 
-double Rec_Last_lAll::Dist(double* a, double*b) {
-  double dist = 0;
-  for (unsigned int k = 0; k < Dim; k++) { dist = dist + (a[k] - b[k])*(a[k] - b[k]); }
-  return sqrt(dist);
-}
-
-void Rec_Last_lAll::UpdateOfCandidate(unsigned int IndexToLinkOfUpdCand, std::vector<std::list<Rec_Last_lAll>::iterator> &vectlinktocands, unsigned int& RealNbExclus) {
-  RealNbExclus = 0;
-  Cost CostNew = Cost(Dim);
-  unsigned int j = vectlinktocands[vectlinktocands.size() - 1] -> GetTau();
-  CostNew.InitialCost(Dim, Tau, j, CumSumData, CumSumData2, VectOfCosts);
-  double Radius2 = (VectOfCosts[j + 1] - VectOfCosts[Tau] - CostNew.get_coef_Var()) / CostNew.get_coef();
-
-  if (Radius2 < 0) { Rect -> DoEmpty_rect(); return;}   //pelt
-
-  pSphere DiskNew = pSphere(Dim);
-  DiskNew.InitialpSphere(Dim, CostNew.get_mu(), sqrt(Radius2));
-  //intersection :
-  Rect -> Intersection_disk(DiskNew);
-  if (Rect -> IsEmpty_rect()) { return; }
-  //exclusion :
-  if (DiskListBefore.size() != 0) {
-    std::list<pSphere>::iterator iter = DiskListBefore.begin();
-    while ( (iter != DiskListBefore.end()) && (!Rect -> IsEmpty_rect())) {
-      if (Rect -> EmptyIntersection(*iter)) {
-        iter = DiskListBefore.erase(iter);
+void Rec_Last_lAll::updateOfCandidate(unsigned int indexToLinkOfUpdCand, std::vector<std::list<Rec_Last_lAll>::iterator> &vectlinktocands, unsigned int& realNbExclus) {
+  realNbExclus = 0;
+  Cost cost = Cost(dim);
+  unsigned int j = vectlinktocands[vectlinktocands.size() - 1] -> getTau();
+  double radius2 = calculRadius2(cost,tau, j); 
+  if (radius2 < 0) { rect -> DoEmpty_rect(); return;}   //pelt
+  pSphere diskI = pSphere(dim);
+  diskI.InitialpSphere(dim, cost.get_mu(), sqrt(radius2));
+  //rect last intersection :
+  rect -> Intersection_disk(diskI);
+  if (rect -> IsEmpty_rect()) { return; }
+  //rect exclusion :
+  if (lDiskPass.size() != 0) {
+    std::list<pSphere>::iterator iter = lDiskPass.begin();
+    while ( (iter != lDiskPass.end()) && (!rect -> IsEmpty_rect())) {
+      if (rect -> EmptyIntersection(*iter)) {
+        iter = lDiskPass.erase(iter);
       } else {
-        Rect -> Exclusion_disk(*iter);
+        rect -> Exclusion_disk(*iter);
         ++iter;
-        ++RealNbExclus;
+        ++realNbExclus;
       }
     }
   }

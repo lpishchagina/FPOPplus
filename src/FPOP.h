@@ -2,11 +2,14 @@
 #define FPOP_H
 //PELT
 #include "Rec_Empty_Empty.h"//1.PELT
-#include "Sph_Last_lAll.h"//2.PELT+
-#include "Rec_Last_lAll.h"//3.LastFPOP
-#include "RecSph_Last_lAll.h"//4.PELT+ LastFPOP
-#include "Rec_All_lAll.h"//5. FPOP
-#include "RecSph_All_lAll.h"//6.PELT+ FPOP
+#include "Sph_Last_lAll.h"//2.sph Inc
+#include "Rec_Last_lAll.h"//3.rect last Int, rect E 
+#include "RecSph_Last_lAll.h"//4. sph Inc, rect last I, rect E
+#include "Rec_All_lAll.h"//5. rect Int, rect E
+#include "RecSph_All_lAll.h"//6. sph Inc, rect Int, rect E
+#include "RecSph_LastwithI_lAll.h"//7 sph Int, sph Inc, rect last Int, rect E
+#include "RecSph_AllwithI_lAll.h"//8 sph Int, sph Inc, rect Int, rect E
+#include "Sph_AllwithI_lAll.h"//9 sph Int, sph Inc
 #include <Rcpp.h>
 #include "math.h"
 
@@ -152,7 +155,7 @@ public:
       DiskIndexBefore.clear();
       typename std::list<CandidateOfChange>::reverse_iterator rit_candidate = ListOfCandidates.rbegin();
       while (rit_candidate != ListOfCandidates.rend()) {
-        u = rit_candidate -> GetTau();
+        u = rit_candidate -> getTau();
         DiskIndexBefore.push_back(u);
         cost.InitialCost(Dim, u, t, CumSumData, CumSumData2, VectOfCosts);
         if (min_val >= cost.get_min()) {
@@ -165,7 +168,7 @@ public:
       VectOfCosts[t + 1] = min_val + Penality;
       LastChpt[t] = tau;
       //Candidate of Change.Initialisation.
-      candidate.InitialOfCandidate(t, CumSumData, CumSumData2, VectOfCosts, DiskIndexBefore);
+      candidate.initialOfCandidate(t, CumSumData, CumSumData2, VectOfCosts, DiskIndexBefore);
       ListOfCandidates.push_back(candidate);
 
       //Generate vector of link
@@ -179,12 +182,12 @@ public:
       //Update ListOfCandidates
       unsigned int SizeVectLink = VectLinkToCandidates.size();
       for (unsigned int IndexOfCandVectLink = 0; IndexOfCandVectLink < SizeVectLink; IndexOfCandVectLink++) {
-        VectLinkToCandidates[IndexOfCandVectLink] -> UpdateOfCandidate(IndexOfCandVectLink,VectLinkToCandidates, RealNbExclus);
+        VectLinkToCandidates[IndexOfCandVectLink] -> updateOfCandidate(IndexOfCandVectLink,VectLinkToCandidates, RealNbExclus);
       }
       //Remove empty candidates
       typename std::list<CandidateOfChange>::iterator it_candidate = ListOfCandidates.begin();
       while (it_candidate != ListOfCandidates.end()) {
-        if (it_candidate -> EmptyOfCandidate()) {
+        if (it_candidate -> isEmptyOfCandidate()) {
           it_candidate = ListOfCandidates.erase(it_candidate);
           --it_candidate;
         }

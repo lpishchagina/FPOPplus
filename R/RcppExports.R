@@ -21,7 +21,7 @@
 #' }
 #'
 #' @examples
-#' N <- 100
+#' N <- 1000
 #' Dim <- 2
 #' Penalty <- 2*Dim*log(N)
 #' time_series <- rnormChanges(p = 2, n = N, changes = NULL, means = matrix(0, ncol = 1, nrow = 2), noise = 1)
@@ -31,6 +31,9 @@
 #' FPOPplus(data = time_series, penalty = Penalty, approximation = 'rectangle', intersection = 'all', exclusion = 'all',NbOfCands = TRUE)
 #' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere_rectangle', intersection = 'all', exclusion = 'all', NbOfCands = TRUE)
 #' FPOPplus(data = time_series, penalty = Penalty, approximation = 'rectangle', intersection = 'empty', exclusion = 'empty', NbOfCands = TRUE)
+#' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere_rectangle', intersection = 'allInt', exclusion = 'all', NbOfCands = TRUE)
+#' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere_rectangle', intersection = 'lastInt', exclusion = 'all', NbOfCands = TRUE)
+#' FPOPplus(data = time_series, penalty = Penalty, approximation = 'sphere', intersection = 'lastInt', exclusion = 'all', NbOfCands = TRUE)
 NULL
 
 FPOPplus <- function(data, penalty, approximation = "rectangle", intersection = "all", exclusion = "all", NbOfCands = FALSE) {
